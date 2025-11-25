@@ -1,14 +1,15 @@
 import 'package:first_wtf_app/model/user_detail.dart';
 import 'package:first_wtf_app/pages/notifications_page.dart';
 import 'package:first_wtf_app/provider/user_notifier.dart';
+import 'package:first_wtf_app/widgets/custom_textfield.dart';
+import 'package:first_wtf_app/widgets/password_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
-  @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  @override State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
@@ -18,22 +19,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Profile"),
+        title: const Text("Profile"),
         centerTitle: true,
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.settings))],
+        actions: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.settings))
+        ],
       ),
       body: ListView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         children: [
           _buildProfilePics(),
           _buildDetails(),
-          SizedBox(height: 16),
-
+          const SizedBox(height: 16),
           _buildAccountSection(),
-          SizedBox(height: 16),
-
+          const SizedBox(height: 16),
           _buildSupportSection(),
-          SizedBox(height: 56),
+          const SizedBox(height: 56),
+          
+          // Logout Button
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade100,
@@ -44,31 +47,30 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             onPressed: () {
               userProvider.logout();
-
               Navigator.pushReplacementNamed(context, "/login");
             },
-            icon: Icon(Icons.logout),
-            label: Text("Logout"),
+            icon: const Icon(Icons.logout),
+            label: const Text("Logout"),
           ),
         ],
       ),
     );
   }
 
-  Column _buildSupportSection() {
+  Widget _buildSupportSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           "Support",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        ListTile(
+        const ListTile(
           title: Text("About us", style: TextStyle(fontSize: 16)),
           trailing: Icon(Icons.arrow_forward_ios_outlined, size: 16),
         ),
-        Divider(),
-        ListTile(
+        const Divider(),
+        const ListTile(
           title: Text("Contact us", style: TextStyle(fontSize: 16)),
           trailing: Icon(Icons.arrow_forward_ios_outlined, size: 16),
         ),
@@ -76,24 +78,37 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Column _buildAccountSection() {
+  Widget _buildAccountSection() {
+    // Get user data without listening (listen: false) to prevent loops
+    var user = Provider.of<UserNotifier>(context, listen: false).loggedInUser;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           "Account",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
+        
+        // Personal Information Tile
         ListTile(
-          title: Text("Personal Information", style: TextStyle(fontSize: 16)),
+          onTap: () {
+            if (user != null) {
+              _showPersonalInfoSheet(context, user);
+            }
+          },
+          title: const Text("Personal Information", style: TextStyle(fontSize: 16)),
+          trailing: const Icon(Icons.arrow_forward_ios_outlined, size: 16),
+        ),
+        
+        const Divider(),
+        const ListTile(
+          title: Text("Payment Methods", style: TextStyle(fontSize: 16)),
           trailing: Icon(Icons.arrow_forward_ios_outlined, size: 16),
         ),
-        Divider(),
-        ListTile(
-          title: Text("Payment Mwthods", style: TextStyle(fontSize: 16)),
-          trailing: Icon(Icons.arrow_forward_ios_outlined, size: 16),
-        ),
-        Divider(),
+        const Divider(),
+        
+        // Notifications Tile
         ListTile(
           onTap: () {
             Navigator.of(context).push(
@@ -104,8 +119,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             );
           },
-          title: Text("Notifications", style: TextStyle(fontSize: 16)),
-          trailing: Icon(Icons.arrow_forward_ios_outlined, size: 16),
+          title: const Text("Notifications", style: TextStyle(fontSize: 16)),
+          trailing: const Icon(Icons.arrow_forward_ios_outlined, size: 16),
         ),
       ],
     );
@@ -113,43 +128,48 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildProfilePics() {
     UserDetail? user = Provider.of<UserNotifier>(context).loggedInUser;
+    // Handle null user gracefully
+    if (user == null) return const SizedBox();
 
     return Container(
-      decoration: BoxDecoration(shape: BoxShape.circle),
+      decoration: const BoxDecoration(shape: BoxShape.circle),
       clipBehavior: Clip.hardEdge,
-      child: user!.profilePicture.isEmpty
-          ? Icon(Icons.person_2, size: 100)
-          : Image.network(user!.profilePicture, width: 100, height: 100),
+      child: user.profilePicture.isEmpty
+          ? const Icon(Icons.person_2, size: 100)
+          : Image.network(user.profilePicture, width: 100, height: 100, fit: BoxFit.cover),
     );
   }
 
   Widget _buildDetails() {
     UserDetail? user = Provider.of<UserNotifier>(context).loggedInUser;
 
-    if (user == null) return Text("User Details not set");
+    if (user == null) return const Text("User Details not set");
 
     return Column(
       children: [
-        Text(
-          user.name,
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-        ),
-
-        IconButton(
-              icon: Icon(Icons.edit, size: 18, color: Colors.blue),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              user.name,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit, size: 18, color: Colors.blue),
               onPressed: () => _showEditBottomSheet(context, user),
             ),
-
+          ],
+        ),
         Text(
           user.email,
-          style: TextStyle(fontWeight: FontWeight.w300, fontSize: 13),
+          style: const TextStyle(fontWeight: FontWeight.w300, fontSize: 13),
         ),
       ],
     );
   }
 
+  // --- SHEET 1: Edit Basic Profile (Name, Phone, etc.) ---
   void _showEditBottomSheet(BuildContext context, var currentUser) {
-    // 1. Create Controllers and pre-fill them with existing data
     final nameController = TextEditingController(text: currentUser.name);
     final phoneController = TextEditingController(text: currentUser.phoneNumber);
     final addressController = TextEditingController(text: currentUser.address);
@@ -157,13 +177,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // This allows the sheet to go full height if needed
-      shape: RoundedRectangleBorder(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return Padding(
-          // This padding ensures the keyboard pushes the sheet up
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
             left: 16,
@@ -184,66 +203,175 @@ class _ProfilePageState extends State<ProfilePage> {
                         borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
-                SizedBox(height: 20),
-                Text("Edit Profile",
+                const SizedBox(height: 20),
+                const Text("Edit Profile",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 
-                // Name Field
+                // We use standard TextField here as requested in previous steps
                 TextField(
                   controller: nameController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Full Name",
                     border: OutlineInputBorder(),
                   ),
                 ),
-                SizedBox(height: 12),
-
-                // Phone Field
+                const SizedBox(height: 12),
                 TextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Phone Number",
                     border: OutlineInputBorder(),
                   ),
                 ),
-                SizedBox(height: 12),
-
-                // Address Field
+                const SizedBox(height: 12),
                 TextField(
                   controller: addressController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Address",
                     border: OutlineInputBorder(),
                   ),
                 ),
-                SizedBox(height: 12),
-
-                 // Occupation Field
+                const SizedBox(height: 12),
                 TextField(
                   controller: occupationController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Occupation",
                     border: OutlineInputBorder(),
                   ),
                 ),
-                SizedBox(height: 20),
-
-                // Save Button
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue, 
-                      foregroundColor: Colors.white
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
                     ),
-                   onPressed: (){},
-                    child: Text("Save Changes"),
+                    onPressed: () {
+                      // Logic to save goes here
+                      Navigator.pop(context);
+                    },
+                    child: const Text("Save Changes"),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // --- SHEET 2: Personal Information (Uses YOUR Custom Widgets) ---
+  void _showPersonalInfoSheet(BuildContext context, var currentUser) {
+    final nameController = TextEditingController(text: currentUser.name);
+    final emailController = TextEditingController(text: currentUser.email);
+    final passwordController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                const SizedBox(height: 20),
+                const Text("Personal Information",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                
+                // Profile Picture
+                Stack(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey.shade300, width: 2),
+                        image: DecorationImage(
+                          fit: BoxFit.cover,
+                          image: currentUser.profilePicture.isNotEmpty
+                              ? NetworkImage(currentUser.profilePicture)
+                              : const AssetImage("assets/profile_pics.jpg") as ImageProvider,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        height: 30,
+                        width: 30,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+
+                CustomTextField(
+                  label: "Full Name",
+                  textEditingController: nameController,
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  label: "Email Address",
+                  textEditingController: emailController,
+                ),
+                const SizedBox(height: 16),
+
+                PasswordTextfield(
+                  label: "New Password",
+                  textEditingController: passwordController,
+                ),
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16))),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text("Update Information",
+                        style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(height: 30),
               ],
             ),
           ),
